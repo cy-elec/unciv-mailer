@@ -11,7 +11,7 @@ import traceback, time
 
 numeric_level = getattr(logging, os.environ.get("LOG_LEVEL", "INFO").upper(), None)
 if not isinstance(numeric_level, int):
-    raise ValueError('Invalid log level: %s' % os.environ["LOG_LEVEL"))
+    raise ValueError('Invalid log level: %s' % os.environ["LOG_LEVEL"])
 logging.basicConfig(
         level=numeric_level,
         format="%(asctime)s [%(levelname)s] %(message)s"
