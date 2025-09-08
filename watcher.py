@@ -14,7 +14,7 @@ if not isinstance(numeric_level, int):
     raise ValueError('Invalid log level: %s' % os.environ["LOG_LEVEL"])
 logging.basicConfig(
         level=numeric_level,
-        format="%(asctime)s [%(levelname)s] %(message)s"
+        format="%(asctime)s [%(levelname)s]: %(message)s"
 )
 
 # Required ENV
@@ -49,6 +49,7 @@ def file_changed(file, known_hashes):
     if not os.path.isfile(file):
         return False
     hash = file_hash(file)
+    logging.debug(f"Compared hashes[o/n]: {known_hashes.get(file)} - {hash}")
     if known_hashes.get(file) == hash:
         return False
     known_hashes[file] = hash
@@ -56,6 +57,8 @@ def file_changed(file, known_hashes):
 
 def process_file(filepath, mail_map, known_hashes):
     
+    # TODO fix hasing issue
+
     if not file_changed(filepath, known_hashes):
         logging.info(f"File unchanged, skipping: {filepath}")
         return
@@ -72,7 +75,7 @@ def process_file(filepath, mail_map, known_hashes):
         turn = parsed.get("turns")
         recipient = mail_map.get(player_id)
         
-        # if data incomplete, try game file instead
+        # TODO if data incomplete, try game file instead
 
         if recipient:
             logging.info(f"Sending mail to {player_id}")
