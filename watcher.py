@@ -8,9 +8,13 @@ from datetime import datetime
 import hashlib
 import traceback, time
 
+
+numeric_level = getattr(logging, os.environ.get("LOG_LEVEL", "INFO").upper(), None)
+if not isinstance(numeric_level, int):
+    raise ValueError('Invalid log level: %s' % loglevel)
 logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s [%(levelname)s %(message)s"
+        level=numeric_level,
+        format="%(asctime)s [%(levelname)s] %(message)s"
 )
 
 # Required ENV
@@ -53,7 +57,7 @@ def file_changed(file, known_hashes):
 def process_file(filepath, mail_map, known_hashes):
     
     if not file_changed(filepath, known_hashes):
-        logging.info(f"File unchanged: {filepath}")
+        logging.info(f"File unchanged, skipping: {filepath}")
         return
 
     with open(filepath, "rb") as f:
@@ -63,10 +67,13 @@ def process_file(filepath, mail_map, known_hashes):
         currentPlayer = parsed.get("currentPlayer")
         civs = [ i for i in parsed.get("civilizations") if i["civName"] == currentPlayer ]
         logging.info(f"CurrentPlayer: {currentPlayer} Civs: {civs}")
+	logging.debug(f"File data: {parsed}")
         player_id = civs[0].get("playerId");
         turn = parsed.get("turns")
         recipient = mail_map.get(player_id)
         
+        # if data incomplete, try game file instead
+
         if recipient:
             logging.info(f"Sending mail to {player_id}")
             send_mail(filepath, parsed, recipient)
@@ -205,6 +212,8 @@ def watch():
                 if filepath.endswith("_Preview") and "CLOSE_WRITE" in event:
                     logging.info(f"Processing file: {filepath}")
                     process_file(filepath, mail_map, known_hashes)
+		else if filepath.endswith("_Preview"):
+		    logging.debug(f"Skipping file[{event}]: {filepath}")
             except Exception as e:
                 logging.error(f"Subroutine failed with: {e}\n{traceback.format_exc()}");
     except Exception as e:
