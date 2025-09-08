@@ -67,7 +67,7 @@ def process_file(filepath, mail_map, known_hashes):
         currentPlayer = parsed.get("currentPlayer")
         civs = [ i for i in parsed.get("civilizations") if i["civName"] == currentPlayer ]
         logging.info(f"CurrentPlayer: {currentPlayer} Civs: {civs}")
-	logging.debug(f"File data: {parsed}")
+        logging.debug(f"File data: {parsed}")
         player_id = civs[0].get("playerId");
         turn = parsed.get("turns")
         recipient = mail_map.get(player_id)
@@ -212,8 +212,8 @@ def watch():
                 if filepath.endswith("_Preview") and "CLOSE_WRITE" in event:
                     logging.info(f"Processing file: {filepath}")
                     process_file(filepath, mail_map, known_hashes)
-		else if filepath.endswith("_Preview"):
-		    logging.debug(f"Skipping file[{event}]: {filepath}")
+                elif filepath.endswith("_Preview"):
+                    logging.debug(f"Skipping file[{event}]: {filepath}")
             except Exception as e:
                 logging.error(f"Subroutine failed with: {e}\n{traceback.format_exc()}");
     except Exception as e:
