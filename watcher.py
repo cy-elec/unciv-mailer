@@ -57,9 +57,9 @@ def load_data():
     with open(FILE_STATE_PATH, "rb") as f:
         try:
             file_states_tmp = json.load(f)
-	except Exception e:
-	    file_states = {}
-	    return
+        except Exception e:
+            file_states = {}
+            return
     file_states = {e: file_states_tmp[e] for e in file_states_tmp if e in files }
     logging.info("File states loaded successfully: {file_states}")
 
