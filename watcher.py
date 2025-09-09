@@ -57,7 +57,8 @@ def load_data():
     with open(FILE_STATE_PATH, "rb") as f:
         try:
             file_states_tmp = json.load(f)
-        except Exception e:
+        except Exception as e:
+            logging.warning(f"Failed to load file_states with {e}\n{traceback.format_exec()}")
             file_states = {}
             return
     file_states = {e: file_states_tmp[e] for e in file_states_tmp if e in files }
@@ -71,7 +72,7 @@ def save_data():
             json.dump(file_states, f)
         logging.info("File states saved successfully")
     except Exception as e:
-        logging.info("Failed to save states: {e}\n{traceback.format_exec()}")
+        logging.info(f"Failed to save states: {e}\n{traceback.format_exec()}")
 
 def send_missed_mails(mail_map):
     for entry in os.scandir(WATCH_DIR):
