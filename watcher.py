@@ -7,7 +7,7 @@ import logging
 from datetime import datetime
 import hashlib
 import traceback, time
-import atexit
+import sys, signal
 
 
 numeric_level = getattr(logging, os.environ.get("LOG_LEVEL", "INFO").upper(), None)
@@ -58,7 +58,7 @@ def save_data():
     global file_states
     logging.info(f"Saving file_states to {FILE_STATE_PATH}")
     try:
-        with open(FILE_STATE_PATH, "wb") as f:
+        with open(FILE_STATE_PATH, "w") as f:
             json.dump(file_states, f)
         logging.info("File states saved successfully")
     except Exception as e:
@@ -258,8 +258,13 @@ def watch(mail_map):
             pass
         time.sleep(7200)
 
+def exit_gracefully():
+    save_data()
+    sys.exit(0)
+
 if __name__ == "__main__":
-    atexit.register(save_data)
+    signal.signal(signal.SIGINT, exit_gracefully)
+    signal.signal(signal.SIGTERM, exit_gracefully)
     mail_map = {}
     if not os.path.exists(MAIL_MAP_FILE):
         logging.warning(f"No mail_map configuration file found. Please add the file here: {MAIL_MAP_FILE}")
