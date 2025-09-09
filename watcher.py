@@ -48,7 +48,7 @@ def load_data():
     logging.info(f"Loading file_states from {FILE_STATE_PATH}")
     if not os.path.exists(FILE_STATE_PATH):
         logging.info("File doesn't exist, skipping")
-	return
+        return
     with open(FILE_STATE_PATH, "rb") as f:
         file_states = json.load(f)
     logging.info("File states loaded successfully")
@@ -63,8 +63,8 @@ def save_data():
 def send_missed_mails(mail_map):
     for entry in os.scandir(WATCH_DIR):
         if not entry.is_file():
-	    continue
-	try:
+            continue
+        try:
             process_file(entry.path, mail_map)
         except Exception as e:
             logging.error(f"send_missed_mails: Processing file {entry.path} failed with: {e}\n{traceback.format_exc()}");
@@ -90,9 +90,9 @@ def process_file(filepath, mail_map):
         decoded = gzip.decompress(base64.b64decode(f.read()))
         parsed = json.loads(decoded)
         
-	if not file_changed(filepath, parsed):
-	    return
-	
+        if not file_changed(filepath, parsed):
+            return
+
         currentPlayer = parsed.get("currentPlayer")
         civs = [ i for i in parsed.get("civilizations") if i["civName"] == currentPlayer ]
         logging.info(f"CurrentPlayer: {currentPlayer} Civs: {civs}")
@@ -102,7 +102,7 @@ def process_file(filepath, mail_map):
         recipient = mail_map.get(player_id)
         
         # TODO if data incomplete, try game file instead
-	# TODO IF NO DATE AND TURN, assume first turn and display appropriately
+        # TODO IF NO DATE AND TURN, assume first turn and display appropriately
 
         if recipient:
             logging.info(f"Sending mail to {player_id}")
@@ -261,7 +261,7 @@ if __name__ == "__main__":
             logging.warning(f"No mail_map configuration file found. Please add the file here: {MAIL_MAP_FILE}")
         mail_map = load_mail_map(mail_map)
         load_data()
-	send_missed_mails(mail_map)
+        send_missed_mails(mail_map)
         watch(mail_map)
     finally:
         save_data()
