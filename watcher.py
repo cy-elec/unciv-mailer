@@ -71,7 +71,7 @@ def send_missed_mails(mail_map):
 
 def file_changed(filepath, parsed):
     global file_states
-    if not os.path.isfile(file):
+    if not os.path.isfile(filepath):
         return False
     file_base = os.path.basename(filepath).replace("_Preview","")
     old_state = file_states.get(file_base)
