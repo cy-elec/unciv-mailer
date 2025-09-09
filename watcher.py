@@ -46,6 +46,7 @@ def load_mail_map(mmap):
     return {}
 
 def load_data():
+    # TODO remove file_states non-existent files
     global file_states
     logging.info(f"Loading file_states from {FILE_STATE_PATH}")
     if not os.path.exists(FILE_STATE_PATH):
@@ -67,7 +68,6 @@ def save_data():
 
 def send_missed_mails(mail_map):
     for entry in os.scandir(WATCH_DIR):
-    # TODO remove file_states non-existent files
         if not entry.is_file():
             continue
         try:
@@ -108,7 +108,6 @@ def process_file(filepath, mail_map):
         recipient = mail_map.get(player_id)
         
         # TODO if data incomplete, try game file instead
-        # TODO IF NO DATE AND TURN, assume first turn and display appropriately
 
         if recipient:
             logging.info(f"Sending mail to {player_id}")
@@ -121,8 +120,8 @@ def send_mail(filepath, parsed, recipient):
 
     gameId = parsed.get("gameId", os.path.basename(filepath).replace("_Preview",""))
     nation = parsed.get("currentPlayer", "Unknown")
-    turn = parsed.get("turns", "-")
-    since = datetime.utcfromtimestamp(parsed.get("currentTurnStartTime", 0)/1000).strftime('%d.%m.%Y %H:%M:%S')
+    turn = parsed.get("turns", "First Turn")
+    since = datetime.utcfromtimestamp(parsed.get("currentTurnStartTime", int(datetime.now(timezone.utc).timestamp()*1000))/1000).strftime('%d.%m.%Y %H:%M:%S')
     
     msg = MIMEMultipart('alternative')
     msg["Subject"] = "Unciv - It's your turn!"
