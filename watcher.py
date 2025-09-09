@@ -2,6 +2,7 @@ import os, base64, gzip, json, smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
+from email.message import EmailMessage
 import subprocess
 import logging
 from datetime import datetime
@@ -258,7 +259,7 @@ def watch(mail_map):
             pass
         time.sleep(7200)
 
-def exit_gracefully():
+def exit_gracefully(signalnum, handler):
     save_data()
     sys.exit(0)
 
