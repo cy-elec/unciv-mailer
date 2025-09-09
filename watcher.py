@@ -46,14 +46,17 @@ def load_mail_map(mmap):
     return {}
 
 def load_data():
-    # TODO remove file_states non-existent files
     global file_states
     logging.info(f"Loading file_states from {FILE_STATE_PATH}")
     if not os.path.exists(FILE_STATE_PATH):
         logging.info("file_states doesn't exist, skipping")
         return
+    logging.info(f"Caching files in {WATCH_DIR}")
+    files = [ e.name for e in os.scandir(WATCH_DIR) if e.is_file() and not e.name.endswidth("_Preview")]
+    logging.debug(f"Files iterated: {files}")
     with open(FILE_STATE_PATH, "rb") as f:
-        file_states = json.load(f)
+        file_states_tmp = json.load(f)
+    file_states = [file_states_tmp[e] for e in file_states_tmp if e in files ]
     logging.info("File states loaded successfully")
 
 def save_data():
