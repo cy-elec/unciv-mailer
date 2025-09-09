@@ -80,7 +80,7 @@ def file_changed(filepath, parsed):
         return False
     file_base = os.path.basename(filepath).replace("_Preview","")
     old_state = file_states.get(file_base)
-    file_state = {"nation": parsed.get("gameId", file_base), "turn": parsed.get("turns")}
+    file_state = {"nation": parsed.get("currentPlayer"), "turn": parsed.get("turns")}
     logging.debug(f"Compared file states: {old_state} - {file_state}")
     if old_state == file_state:
         logging.info(f"File unchanged, skipping...")
@@ -259,7 +259,7 @@ def watch(mail_map):
             pass
         time.sleep(7200)
 
-def exit_gracefully(signalnum, handler):
+def exit_gracefully(signalnum, frame):
     save_data()
     sys.exit(0)
 
