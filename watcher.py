@@ -14,7 +14,7 @@ if not isinstance(numeric_level, int):
     raise ValueError('Invalid log level: %s' % os.environ["LOG_LEVEL"])
 logging.basicConfig(
         level=numeric_level,
-        format="%(asctime)s [%(levelname)s]: %(message)s"
+        format="%(asctime)s [%(levelname)s - %(funcName)20s()]: %(message)s"
 )
 
 # Required ENV
@@ -47,7 +47,7 @@ def load_data():
     global file_states
     logging.info(f"Loading file_states from {FILE_STATE_PATH}")
     if not os.path.exists(FILE_STATE_PATH):
-        logging.info("File doesn't exist, skipping")
+        logging.info("file_states doesn't exist, skipping")
         return
     with open(FILE_STATE_PATH, "rb") as f:
         file_states = json.load(f)
