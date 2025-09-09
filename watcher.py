@@ -62,7 +62,7 @@ def load_data():
             file_states = {}
             return
     file_states = {e: file_states_tmp[e] for e in file_states_tmp if e in files }
-    logging.info("File states loaded successfully: {file_states}")
+    logging.info(f"File states loaded successfully: {file_states}")
 
 def save_data():
     global file_states
