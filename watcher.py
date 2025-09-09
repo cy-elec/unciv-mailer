@@ -56,9 +56,12 @@ def load_data():
 def save_data():
     global file_states
     logging.info(f"Saving file_states to {FILE_STATE_PATH}")
-    with open(FILE_STATE_PATH, "wb") as f:
-        json.dump(file_states, f)
-    logging.info("File states saved successfully")
+    try:
+        with open(FILE_STATE_PATH, "wb") as f:
+            json.dump(file_states, f)
+        logging.info("File states saved successfully")
+    except Exception as e:
+        logging.info("Failed to save states: {e}\n{traceback.format_exec()}")
 
 def send_missed_mails(mail_map):
     for entry in os.scandir(WATCH_DIR):
