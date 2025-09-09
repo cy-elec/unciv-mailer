@@ -78,9 +78,9 @@ def file_changed(filepath, parsed):
     file_state = {"nation": parsed.get("gameId", file_base), "turn": parsed.get("turns")}
     logging.debug(f"Compared file states: {old_state} - {file_state}")
     if old_state == file_state:
-        logging.debug(f"File unchanged, skipping...")
+        logging.info(f"File unchanged, skipping...")
         return False
-    logging.debug(f"File changed, processing...")
+    logging.info(f"File changed, processing...")
     file_states[file_base] = file_state
     return True
 
@@ -95,7 +95,7 @@ def process_file(filepath, mail_map):
 
         currentPlayer = parsed.get("currentPlayer")
         civs = [ i for i in parsed.get("civilizations") if i["civName"] == currentPlayer ]
-        logging.info(f"CurrentPlayer: {currentPlayer} Civs: {civs}")
+        logging.debug(f"CurrentPlayer: {currentPlayer} Civs: {civs}")
         logging.debug(f"File data: {parsed}")
         player_id = civs[0].get("playerId");
         turn = parsed.get("turns")
