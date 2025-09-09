@@ -56,8 +56,8 @@ def load_data():
     logging.debug(f"Files iterated: {files}")
     with open(FILE_STATE_PATH, "rb") as f:
         file_states_tmp = json.load(f)
-    file_states = {file_states_tmp[e] for e in file_states_tmp if e in files }
-    logging.info("File states loaded successfully")
+    file_states = {e: file_states_tmp[e] for e in file_states_tmp if e in files }
+    logging.info("File states loaded successfully: {file_states}")
 
 def save_data():
     global file_states
