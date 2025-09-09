@@ -52,7 +52,7 @@ def load_data():
         logging.info("file_states doesn't exist, skipping")
         return
     logging.info(f"Caching files in {WATCH_DIR}")
-    files = [ e.name for e in os.scandir(WATCH_DIR) if e.is_file() and not e.name.endswidth("_Preview")]
+    files = [ e.name for e in os.scandir(WATCH_DIR) if e.is_file() and not e.name.endswith("_Preview")]
     logging.debug(f"Files iterated: {files}")
     with open(FILE_STATE_PATH, "rb") as f:
         file_states_tmp = json.load(f)
