@@ -67,6 +67,7 @@ def save_data():
 
 def send_missed_mails(mail_map):
     for entry in os.scandir(WATCH_DIR):
+    # TODO remove file_states non-existent files
         if not entry.is_file():
             continue
         try:
