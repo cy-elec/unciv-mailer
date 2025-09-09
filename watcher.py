@@ -7,6 +7,7 @@ import logging
 from datetime import datetime
 import hashlib
 import traceback, time
+import atexit
 
 
 numeric_level = getattr(logging, os.environ.get("LOG_LEVEL", "INFO").upper(), None)
@@ -258,13 +259,11 @@ def watch(mail_map):
         time.sleep(7200)
 
 if __name__ == "__main__":
-    try:
-        mail_map = {}
-        if not os.path.exists(MAIL_MAP_FILE):
-            logging.warning(f"No mail_map configuration file found. Please add the file here: {MAIL_MAP_FILE}")
-        mail_map = load_mail_map(mail_map)
-        load_data()
-        send_missed_mails(mail_map)
-        watch(mail_map)
-    finally:
-        save_data()
+    atexit.register(save_data)
+    mail_map = {}
+    if not os.path.exists(MAIL_MAP_FILE):
+        logging.warning(f"No mail_map configuration file found. Please add the file here: {MAIL_MAP_FILE}")
+    mail_map = load_mail_map(mail_map)
+    load_data()
+    send_missed_mails(mail_map)
+    watch(mail_map)
