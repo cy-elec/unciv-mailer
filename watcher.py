@@ -20,6 +20,7 @@ logging.basicConfig(
 # Required ENV
 WATCH_DIR = os.environ["WATCH_DIR"]
 MAIL_MAP_FILE = os.environ["MAIL_MAP_FILE"]
+FILE_STATE_PATH = os.environ["FILE_STATE_PATH"]
 SMTP_USER = os.environ["SMTP_USER"]
 SMTP_USER_FROM = f'{os.environ["SMTP_USER_FROM"]} <{SMTP_USER}>'
 SMTP_PASS = os.environ["SMTP_PASS"]
@@ -28,6 +29,7 @@ SMTP_PORT = os.environ["SMTP_PORT"]
 SMTP_ERROR_ADDR = os.environ["SMTP_ERROR_ADDR"]
 
 mail_map_mtime = None
+file_states = {}
 
 def load_mail_map(mmap):
     global mail_map_mtime
@@ -41,32 +43,56 @@ def load_mail_map(mmap):
         return mmap
     return {}
 
-def file_hash(path):
-    with open(path, "rb") as f:
-        return hashlib.sha256(f.read()).hexdigest()
+def load_data():
+    global file_states
+    logging.info(f"Loading file_states from {FILE_STATE_PATH}")
+    if not os.path.exists(FILE_STATE_PATH):
+        logging.info("File doesn't exist, skipping")
+	return
+    with open(FILE_STATE_PATH, "rb") as f:
+        file_states = json.load(f)
+    logging.info("File states loaded successfully")
 
-def file_changed(file, known_hashes):
+def save_data():
+    global file_states
+    logging.info(f"Saving file_states to {FILE_STATE_PATH}")
+    with open(FILE_STATE_PATH, "wb") as f:
+        json.dump(file_states, f)
+    logging.info("File states saved successfully")
+
+def send_missed_mails(mail_map):
+    for entry in os.scandir(WATCH_DIR):
+        if not entry.is_file():
+	    continue
+	try:
+            process_file(entry.path, mail_map)
+        except Exception as e:
+            logging.error(f"send_missed_mails: Processing file {entry.path} failed with: {e}\n{traceback.format_exc()}");
+
+def file_changed(filepath, parsed):
+    global file_states
     if not os.path.isfile(file):
         return False
-    hash = file_hash(file)
-    logging.debug(f"Compared hashes[o/n]: {known_hashes.get(file)} - {hash}")
-    if known_hashes.get(file) == hash:
+    file_base = os.path.basename(filepath).replace("_Preview","")
+    old_state = file_states.get(file_base)
+    file_state = {"nation": parsed.get("gameId", file_base), "turn": parsed.get("turns")
+    logging.debug(f"Compared file states: {old_state} - {file_state}")
+    if old_state == file_state:
+        logging.debug(f"File unchanged, skipping...")
         return False
-    known_hashes[file] = hash
+    logging.debug(f"File changed, processing...")
+    file_states[file_base] = file_state
     return True
 
-def process_file(filepath, mail_map, known_hashes):
+def process_file(filepath, mail_map):
     
-    # TODO fix hasing issue
-
-    if not file_changed(filepath, known_hashes):
-        logging.info(f"File unchanged, skipping: {filepath}")
-        return
-
     with open(filepath, "rb") as f:
         decoded = gzip.decompress(base64.b64decode(f.read()))
         parsed = json.loads(decoded)
         
+	if not file_changed(filepath, parsed):
+	    return
+	
         currentPlayer = parsed.get("currentPlayer")
         civs = [ i for i in parsed.get("civilizations") if i["civName"] == currentPlayer ]
         logging.info(f"CurrentPlayer: {currentPlayer} Civs: {civs}")
@@ -76,6 +102,7 @@ def process_file(filepath, mail_map, known_hashes):
         recipient = mail_map.get(player_id)
         
         # TODO if data incomplete, try game file instead
+	# TODO IF NO DATE AND TURN, assume first turn and display appropriately
 
         if recipient:
             logging.info(f"Sending mail to {player_id}")
@@ -199,11 +226,7 @@ def notify_admin(e):
         smtp.login(SMTP_USER, SMTP_PASS)
         smtp.send_message(msg)
 
-def watch():
-    known_hashes = {}
-    mail_map = {}
-    if not os.path.exists(MAIL_MAP_FILE):
-        logging.warning(f"No mail_map configuration file found. Please add the file here: {MAIL_MAP_FILE}")
+def watch(mail_map):
     try:
         proc = subprocess.Popen(["inotifywait", "-m", WATCH_DIR, "-e", "MODIFY,CLOSE_WRITE,CLOSE_NOWRITE", "--format", "%w%f %e"], stdout=subprocess.PIPE)
         for line in proc.stdout:
@@ -214,7 +237,7 @@ def watch():
                 event = parts[-1]
                 if filepath.endswith("_Preview") and "CLOSE_WRITE" in event:
                     logging.info(f"Processing file: {filepath}")
-                    process_file(filepath, mail_map, known_hashes)
+                    process_file(filepath, mail_map)
                 elif filepath.endswith("_Preview"):
                     logging.debug(f"Skipping file[{event}]: {filepath}")
             except Exception as e:
@@ -232,4 +255,13 @@ def watch():
         time.sleep(7200)
 
 if __name__ == "__main__":
-    watch()
+    try:
+        mail_map = {}
+        if not os.path.exists(MAIL_MAP_FILE):
+            logging.warning(f"No mail_map configuration file found. Please add the file here: {MAIL_MAP_FILE}")
+        mail_map = load_mail_map(mail_map)
+        load_data()
+	send_missed_mails(mail_map)
+        watch(mail_map)
+    finally:
+        save_data()
