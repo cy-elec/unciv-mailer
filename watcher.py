@@ -5,7 +5,7 @@ from email.mime.base import MIMEBase
 from email.message import EmailMessage
 import subprocess
 import logging
-import datetime
+from datetime import datetime, timezone
 import hashlib
 import traceback, time
 import sys, signal
@@ -121,7 +121,7 @@ def send_mail(filepath, parsed, recipient):
     gameId = parsed.get("gameId", os.path.basename(filepath).replace("_Preview",""))
     nation = parsed.get("currentPlayer", "Unknown")
     turn = parsed.get("turns", "First Turn")
-    since = datetime.datetime.utcfromtimestamp(parsed.get("currentTurnStartTime", int(datetime.datetime.now(timezone.utc).timestamp()*1000))/1000).strftime('%d.%m.%Y %H:%M:%S')
+    since = datetime.utcfromtimestamp(parsed.get("currentTurnStartTime", int(datetime.now(timezone.utc).timestamp()*1000))/1000).strftime('%d.%m.%Y %H:%M:%S')
     
     msg = MIMEMultipart('alternative')
     msg["Subject"] = "Unciv - It's your turn!"
